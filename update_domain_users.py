@@ -1,7 +1,6 @@
 import os
 import requests
 import json
-from urllib.parse import quote
 from dotenv import load_dotenv
 
 ORG_ID = "3ffb8191-13c1-43e3-ac0e-5fbefacc6fc4"
@@ -18,7 +17,6 @@ def main():
     access_token = f'Bearer {os.getenv("ACCESS_TOKEN")}'
 
     domain_users_response = get_domain_user(access_token)
-
 
     if domain_users_response:
         domain_users = domain_users_response['content']
@@ -39,6 +37,22 @@ def get_domain_user(access_token):
 
     if response.status_code == 200:
         domain_users_response = json.loads(response.content.decode('utf-8'))
+        users = domain_users_response.get('content', [])
+
+        active_users = [user for user in users if user.get("Status") == "Active"]
+        inactive_users = [user for user in users if user.get("Status") == "Inactive"]
+
+        print(f"Total Number of users: {len(users)}")
+        print(f"Number of Active users: {len(active_users)}")
+        print(f"Number of Inactive users: {len(inactive_users)}")
+
+        print("\nActive Users:")
+        for user in active_users:
+            print(f"Email: {user.get('Email', 'No email provided')}")
+
+        print("\nInactive Users:")
+        for user in inactive_users:
+            print(f"Email: {user.get('Email', 'No email provided')}")
         return domain_users_response
     else:
         print(f"Failed to retrieve organization admins. Status code: {response.status_code}")
