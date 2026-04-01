@@ -1,5 +1,4 @@
 import os
-import re
 import base64
 import uuid
 import requests
@@ -19,14 +18,35 @@ BASE_URL = os.getenv('BASE_URL')
 CERT_TYPE = 'WRPAC'
 CERT = (f'certs/{ORG}/{ENV}/transport.pem', f'certs/{ORG}/{ENV}/transport.key')
 HEADERS = {'Authorization': f'Bearer {ACCESS_TOKEN}'}
-CNF_PATH = f'certs/{ORG}/{ENV}/wrpac.cnf'
+
+BASE_CNF = """[req]
+default_bits = 2048
+default_md = sha256
+encrypt_key = yes
+prompt = no
+string_mask = nombstr
+distinguished_name = client_distinguished_name
+req_extensions = req_cert_extensions
+
+[ client_distinguished_name ]
+countryName = BR
+organizationName = Cypress Org Own
+organizationIdentifier = VATBR-889333566138222
+organizationalUnitName = {ou_placeholder}
+commonName = Cypress_03_09_2025_1f333acfe
+
+[ req_cert_extensions ]
+subjectAltName = @alt_name
+
+[ alt_name ]
+URI.1 = www.testing.com
+"""
 
 
 def load_base_cnf(ss_id=None):
-    with open(CNF_PATH, 'r') as f:
-        cnf = f.read()
+    cnf = BASE_CNF
     if ss_id:
-        cnf = re.sub(r'organizationalUnitName\s*=\s*.+', f'organizationalUnitName = {ss_id}', cnf)
+        cnf = cnf.replace('{ou_placeholder}', ss_id)
     return cnf
 
 
@@ -330,7 +350,7 @@ def main():
     ss_id = create_software_statement(org_id, domain_name, role_name)
 
     cnf_with_ou = load_base_cnf(ss_id=ss_id)
-    cnf_without_ou = re.sub(r'organizationalUnitName\s*=\s*.+\n', '', cnf_with_ou)
+    cnf_without_ou = BASE_CNF.replace('organizationalUnitName = {ou_placeholder}\n', '')
 
     print('\n══════════════════════════════════════')
     print('  POSITIVE TESTS')
