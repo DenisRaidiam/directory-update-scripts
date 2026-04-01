@@ -1,3 +1,7 @@
 .env
 /organisations/**/certs/*
+certs/**/*.pem
+certs/**/*.key
 .idea
+venv/
+.DS_Store
