@@ -19,7 +19,14 @@ CERT_TYPE = 'WRPAC'
 CERT = (f'certs/{ORG}/{ENV}/transport.pem', f'certs/{ORG}/{ENV}/transport.key')
 HEADERS = {'Authorization': f'Bearer {ACCESS_TOKEN}'}
 
-BASE_CNF = """[req]
+# Organisation / CSR subject values — defined once, used in both org creation and CSR generation
+ORG_COUNTRY = 'BR'
+ORG_LEGAL_NAME = 'Cypress Org Own'
+ORG_REGISTRATION_NUMBER = '889333566138222'
+CSR_COMMON_NAME = 'Cypress_03_09_2025_1f333acfe'
+CSR_ORG_IDENTIFIER = f'VATBR-{ORG_REGISTRATION_NUMBER}'
+
+BASE_CNF = f"""[req]
 default_bits = 2048
 default_md = sha256
 encrypt_key = yes
@@ -29,11 +36,11 @@ distinguished_name = client_distinguished_name
 req_extensions = req_cert_extensions
 
 [ client_distinguished_name ]
-countryName = BR
-organizationName = Cypress Org Own
-organizationIdentifier = VATBR-889333566138222
-organizationalUnitName = {ou_placeholder}
-commonName = Cypress_03_09_2025_1f333acfe
+countryName = {ORG_COUNTRY}
+organizationName = {ORG_LEGAL_NAME}
+organizationIdentifier = {CSR_ORG_IDENTIFIER}
+organizationalUnitName = {{ou_placeholder}}
+commonName = {CSR_COMMON_NAME}
 
 [ req_cert_extensions ]
 subjectAltName = @alt_name
@@ -192,13 +199,13 @@ def _create_organisation():
         'OrganisationId': org_id,
         'OrganisationName': org_name,
         'Status': 'Active',
-        'CountryOfRegistration': 'BR',
-        'RegistrationNumber': '889333566138222',
-        'LegalEntityName': 'Cypress Org Own',
+        'CountryOfRegistration': ORG_COUNTRY,
+        'RegistrationNumber': ORG_REGISTRATION_NUMBER,
+        'LegalEntityName': ORG_LEGAL_NAME,
         'AddressLine1': 'test line 1',
         'City': 'London',
         'Postcode': 'ME19 5FG',
-        'Country': 'BR',
+        'Country': ORG_COUNTRY,
         'CompanyRegister': 'REG123',
     })
     if response.status_code != 201:
